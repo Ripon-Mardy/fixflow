@@ -1,0 +1,263 @@
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  // url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  MANAGER
+  TECHNICIAN
+  TENANT
+}
+
+enum UserStatus {
+  ACTIVE
+  DISABLED
+}
+
+enum RequestPriority {
+  LOW
+  MEDIUM
+  HIGH
+  EMERGENCY
+}
+
+enum RequestStatus {
+  SUBMITTED
+  UNDER_REVIEW
+  ASSIGNED
+  IN_PROGRESS
+  WAITING_FOR_PARTS
+  RESOLVED
+  CLOSED
+}
+
+enum TechnicianAvailability {
+  AVAILABLE
+  BUSY
+  OFF_DUTY
+}
+
+enum NotificationType {
+  REQUEST_CREATED
+  REQUEST_ASSIGNED
+  STATUS_CHANGED
+  PRIORITY_CHANGED
+  COMMENT_ADDED
+  REQUEST_RESOLVED
+  UPDATE_REQUESTED
+  EMERGENCY
+}
+
+model User {
+  id           String     @id @default(cuid())
+  email        String     @unique
+  name         String
+  passwordHash String
+  role         Role       @default(TENANT)
+  status       UserStatus @default(ACTIVE)
+  phone        String?
+  avatarUrl    String?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  // Manager -> properties they manage
+  managedProperties Property[] @relation("PropertyManager")
+
+  // Tenant -> unit occupancy
+  unit   Unit?   @relation("UnitTenant", fields: [unitId], references: [id])
+  unitId String?
+
+  technicianProfile TechnicianProfile?
+
+  requestsCreated       MaintenanceRequest[] @relation("RequestTenant")
+  requestsAssigned      MaintenanceRequest[] @relation("RequestTechnician")
+  comments              RequestComment[]
+  notifications         Notification[]
+  activityLogs          ActivityLog[]
+
+  @@index([role])
+  @@index([status])
+}
+
+model Property {
+  id           String   @id @default(cuid())
+  name         String
+  addressLine  String
+  city         String
+  state        String
+  postalCode   String
+  imageUrl     String?
+  description  String?
+  yearBuilt    Int?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  manager   User?   @relation("PropertyManager", fields: [managerId], references: [id])
+  managerId String?
+
+  units    Unit[]
+  requests MaintenanceRequest[]
+
+  @@index([managerId])
+}
+
+model Unit {
+  id        String   @id @default(cuid())
+  label     String // e.g. "Unit 4B"
+  bedrooms  Int      @default(1)
+  bathrooms Int      @default(1)
+  floor     Int      @default(1)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  propertyId String
+
+  tenants  User[]               @relation("UnitTenant")
+  requests MaintenanceRequest[]
+
+  @@unique([propertyId, label])
+  @@index([propertyId])
+}
+
+model Category {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  slug      String   @unique
+  icon      String   @default("wrench")
+  enabled   Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  requests MaintenanceRequest[]
+}
+
+model MaintenanceRequest {
+  id                String          @id @default(cuid())
+  reference         String          @unique // FX-2026-1048
+  title             String
+  description       String
+  priority          RequestPriority @default(MEDIUM)
+  status            RequestStatus   @default(SUBMITTED)
+  preferredAccess   String?
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  resolvedAt        DateTime?
+  scheduledFor      DateTime?
+
+  category   Category @relation(fields: [categoryId], references: [id])
+  categoryId String
+
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  propertyId String
+
+  unit   Unit?   @relation(fields: [unitId], references: [id])
+  unitId String?
+
+  tenant   User   @relation("RequestTenant", fields: [tenantId], references: [id])
+  tenantId String
+
+  technician   User?   @relation("RequestTechnician", fields: [technicianId], references: [id])
+  technicianId String?
+
+  comments      RequestComment[]
+  attachments   RequestAttachment[]
+  notifications Notification[]
+  activityLogs  ActivityLog[]
+
+  @@index([status])
+  @@index([priority])
+  @@index([propertyId])
+  @@index([technicianId])
+  @@index([tenantId])
+  @@index([categoryId])
+  @@index([createdAt])
+}
+
+model RequestComment {
+  id         String   @id @default(cuid())
+  body       String
+  internal   Boolean  @default(false) // internal note (manager/tech only)
+  system     Boolean  @default(false) // timeline system event
+  createdAt  DateTime @default(now())
+
+  request   MaintenanceRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  requestId String
+
+  author   User?   @relation(fields: [authorId], references: [id])
+  authorId String?
+
+  @@index([requestId])
+}
+
+model RequestAttachment {
+  id        String   @id @default(cuid())
+  url       String
+  caption   String?
+  kind      String   @default("issue") // issue | completion
+  createdAt DateTime @default(now())
+
+  request   MaintenanceRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  requestId String
+
+  @@index([requestId])
+}
+
+model TechnicianProfile {
+  id                    String                 @id @default(cuid())
+  specialization        String
+  availability          TechnicianAvailability @default(AVAILABLE)
+  rating                Float                  @default(4.6)
+  avgResolutionHours    Float                  @default(28)
+  completedJobs         Int                    @default(0)
+  bio                   String?
+  createdAt             DateTime               @default(now())
+  updatedAt             DateTime               @updatedAt
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String @unique
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  type      NotificationType
+  title     String
+  body      String
+  read      Boolean          @default(false)
+  createdAt DateTime         @default(now())
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+
+  request   MaintenanceRequest? @relation(fields: [requestId], references: [id], onDelete: SetNull)
+  requestId String?
+
+  @@index([userId])
+  @@index([read])
+}
+
+model ActivityLog {
+  id        String   @id @default(cuid())
+  action    String // e.g. "request.status_changed"
+  summary   String // human readable
+  entity    String // "MaintenanceRequest" | "User" | "Property" ...
+  entityId  String?
+  metadata  Json?
+  ipAddress String   @default("127.0.0.1")
+  createdAt DateTime @default(now())
+
+  actor   User?   @relation(fields: [actorId], references: [id], onDelete: SetNull)
+  actorId String?
+
+  request   MaintenanceRequest? @relation(fields: [requestId], references: [id], onDelete: SetNull)
+  requestId String?
+
+  @@index([entity])
+  @@index([createdAt])
+}
