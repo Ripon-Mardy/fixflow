@@ -3,14 +3,18 @@ import type { Role } from "@prisma/client";
 export type NavItem = {
   href: string;
   label: string;
-  icon: string; // lucide icon name, resolved in the sidebar
-  roles?: Role[]; // if omitted, visible to every dashboard role
+  icon: string;
+  roles?: Role[];
   exact?: boolean;
 };
 
-/** Manager/admin get the full product nav; technicians and tenants a subset. */
 export const DASHBOARD_NAV: NavItem[] = [
-  { href: "/dashboard", label: "Dashboard", icon: "LayoutDashboard", exact: true },
+  {
+    href: "/dashboard",
+    label: "Dashboard",
+    icon: "LayoutDashboard",
+    exact: true,
+  },
   { href: "/dashboard/requests", label: "Requests", icon: "ClipboardList" },
   {
     href: "/dashboard/requests/new",

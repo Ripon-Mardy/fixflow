@@ -12,10 +12,6 @@ export type SessionUser = Prisma.UserGetPayload<{
   };
 }>;
 
-/**
- * Resolve the currently authenticated user (or null).
- * Cached per-request so repeated calls in a render tree hit the DB once.
- */
 export const getCurrentUser = cache(async (): Promise<SessionUser | null> => {
   const userId = await getSessionUserId();
   if (!userId) return null;

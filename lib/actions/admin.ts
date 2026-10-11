@@ -6,7 +6,11 @@ import { requireRole } from "@/lib/auth";
 import { hashPassword } from "@/lib/auth/password";
 import { DEMO_PASSWORD } from "@/lib/constants";
 import { logActivity } from "@/lib/services/activity";
-import { categorySchema, propertySchema, userSchema } from "@/lib/validations/admin";
+import {
+  categorySchema,
+  propertySchema,
+  userSchema,
+} from "@/lib/validations/admin";
 
 export type AdminResult = { ok: boolean; error?: string };
 
@@ -28,8 +32,12 @@ export async function createUser(formData: FormData): Promise<AdminResult> {
     phone: formData.get("phone"),
     status: formData.get("status") || "ACTIVE",
   });
+
   if (!parsed.success) {
-    return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid input." };
+    return {
+      ok: false,
+      error: parsed.error.issues[0]?.message ?? "Invalid input.",
+    };
   }
   const email = parsed.data.email.toLowerCase().trim();
   if (await prisma.user.findUnique({ where: { email } })) {
@@ -76,7 +84,10 @@ export async function updateUser(formData: FormData): Promise<AdminResult> {
     status: formData.get("status") || "ACTIVE",
   });
   if (!parsed.success) {
-    return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid input." };
+    return {
+      ok: false,
+      error: parsed.error.issues[0]?.message ?? "Invalid input.",
+    };
   }
   const existing = await prisma.user.findUnique({ where: { id } });
   if (!existing) return { ok: false, error: "User not found." };
@@ -175,7 +186,10 @@ export async function createProperty(formData: FormData): Promise<AdminResult> {
   const admin = await requireRole("ADMIN", { redirectTo: "/dashboard" });
   const parsed = propertySchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) {
-    return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid input." };
+    return {
+      ok: false,
+      error: parsed.error.issues[0]?.message ?? "Invalid input.",
+    };
   }
   const p = parsed.data;
   const property = await prisma.property.create({
@@ -208,7 +222,10 @@ export async function updateProperty(formData: FormData): Promise<AdminResult> {
   const id = String(formData.get("id"));
   const parsed = propertySchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) {
-    return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid input." };
+    return {
+      ok: false,
+      error: parsed.error.issues[0]?.message ?? "Invalid input.",
+    };
   }
   const p = parsed.data;
   await prisma.property.update({
@@ -290,13 +307,21 @@ export async function createCategory(formData: FormData): Promise<AdminResult> {
   const parsed = categorySchema.safeParse({
     name: formData.get("name"),
     icon: formData.get("icon") || "wrench",
-    enabled: formData.get("enabled") === "true" || formData.get("enabled") === "on",
+    enabled:
+      formData.get("enabled") === "true" || formData.get("enabled") === "on",
   });
   if (!parsed.success) {
-    return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid input." };
+    return {
+      ok: false,
+      error: parsed.error.issues[0]?.message ?? "Invalid input.",
+    };
   }
   const slug = slugify(parsed.data.name);
-  if (await prisma.category.findFirst({ where: { OR: [{ slug }, { name: parsed.data.name }] } })) {
+  if (
+    await prisma.category.findFirst({
+      where: { OR: [{ slug }, { name: parsed.data.name }] },
+    })
+  ) {
     return { ok: false, error: "That category already exists." };
   }
   const cat = await prisma.category.create({
@@ -324,10 +349,14 @@ export async function updateCategory(formData: FormData): Promise<AdminResult> {
   const parsed = categorySchema.safeParse({
     name: formData.get("name"),
     icon: formData.get("icon") || "wrench",
-    enabled: formData.get("enabled") === "true" || formData.get("enabled") === "on",
+    enabled:
+      formData.get("enabled") === "true" || formData.get("enabled") === "on",
   });
   if (!parsed.success) {
-    return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid input." };
+    return {
+      ok: false,
+      error: parsed.error.issues[0]?.message ?? "Invalid input.",
+    };
   }
   await prisma.category.update({
     where: { id },

@@ -1,12 +1,3 @@
-/**
- * File storage abstraction.
- *
- * Demo mode: the request form accepts a curated set of hosted image URLs
- * (see `SAMPLE_ISSUE_PHOTOS`) so there are no upload credentials to manage.
- * To connect real uploads later, implement `uploadFile` against S3 / R2 /
- * UploadThing and keep the return shape identical.
- */
-
 export type StoredFile = { url: string; caption?: string };
 
 export const SAMPLE_ISSUE_PHOTOS: { url: string; label: string }[] = [
@@ -45,9 +36,11 @@ export async function uploadFile(_file: File): Promise<StoredFile> {
 export function isAllowedImageUrl(url: string) {
   try {
     const u = new URL(url);
-    return ["images.unsplash.com", "plus.unsplash.com", "res.cloudinary.com"].includes(
-      u.hostname,
-    );
+    return [
+      "images.unsplash.com",
+      "plus.unsplash.com",
+      "res.cloudinary.com",
+    ].includes(u.hostname);
   } catch {
     return false;
   }
