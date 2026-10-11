@@ -1,10 +1,3 @@
-/**
- * Shared application types.
- *
- * Most data shapes are derived directly from Prisma (`Prisma.XGetPayload<...>`)
- * at the query layer so they stay in sync with the schema. This file holds the
- * small hand-written types that cross module boundaries.
- */
 import type {
   MaintenanceRequest,
   Notification,

@@ -127,7 +127,12 @@ export async function listUsers(params: {
     }),
   ]);
 
-  return { items, total, page, pageCount: Math.max(1, Math.ceil(total / PAGE)) };
+  return {
+    items,
+    total,
+    page,
+    pageCount: Math.max(1, Math.ceil(total / PAGE)),
+  };
 }
 
 export async function listActivity(params: {
@@ -138,6 +143,7 @@ export async function listActivity(params: {
   const PAGE = 20;
   const page = Math.max(1, params.page ?? 1);
   const where: import("@prisma/client").Prisma.ActivityLogWhereInput = {};
+
   if (params.entity && params.entity !== "ALL") where.entity = params.entity;
   if (params.q) {
     where.OR = [
@@ -157,5 +163,10 @@ export async function listActivity(params: {
     }),
   ]);
 
-  return { items, total, page, pageCount: Math.max(1, Math.ceil(total / PAGE)) };
+  return {
+    items,
+    total,
+    page,
+    pageCount: Math.max(1, Math.ceil(total / PAGE)),
+  };
 }
