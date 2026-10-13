@@ -183,8 +183,8 @@ model MaintenanceRequest {
 model RequestComment {
   id         String   @id @default(cuid())
   body       String
-  internal   Boolean  @default(false) // internal note (manager/tech only)
-  system     Boolean  @default(false) // timeline system event
+  internal   Boolean  @default(false) 
+  system     Boolean  @default(false) 
   createdAt  DateTime @default(now())
 
   request   MaintenanceRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
@@ -244,9 +244,9 @@ model Notification {
 
 model ActivityLog {
   id        String   @id @default(cuid())
-  action    String // e.g. "request.status_changed"
-  summary   String // human readable
-  entity    String // "MaintenanceRequest" | "User" | "Property" ...
+  action    String
+  summary   String
+  entity    String
   entityId  String?
   metadata  Json?
   ipAddress String   @default("127.0.0.1")
