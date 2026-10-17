@@ -22,8 +22,16 @@ export default async function AdminOverviewPage() {
 
       <div className="grid gap-4 pb-6 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard label="Total Users" value={data.totals.users} icon={Users} />
-        <StatCard label="Total Properties" value={data.totals.properties} icon={Building2} />
-        <StatCard label="Total Requests" value={data.totals.requests} icon={ClipboardList} />
+        <StatCard
+          label="Total Properties"
+          value={data.totals.properties}
+          icon={Building2}
+        />
+        <StatCard
+          label="Total Requests"
+          value={data.totals.requests}
+          icon={ClipboardList}
+        />
         <StatCard
           label="Active Technicians"
           value={data.totals.activeTechnicians}
@@ -32,6 +40,7 @@ export default async function AdminOverviewPage() {
         />
       </div>
 
+      {/* overview charts  */}
       <OverviewCharts data={data} />
 
       <Card className="mt-6">

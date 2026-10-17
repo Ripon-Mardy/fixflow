@@ -87,16 +87,19 @@ export async function registerAction(
     confirm: formData.get("confirm"),
   });
   if (!parsed.success) {
-    return { error: parsed.error.issues[0]?.message ?? "Please check the form." };
+    return {
+      error: parsed.error.issues[0]?.message ?? "Please check the form.",
+    };
   }
 
   const email = parsed.data.email.toLowerCase().trim();
   const existing = await prisma.user.findUnique({ where: { email } });
   if (existing) {
-    return { error: "An account with that email already exists. Try logging in." };
+    return {
+      error: "An account with that email already exists. Try logging in.",
+    };
   }
 
-  // New self-serve signups are property managers by default.
   const user = await prisma.user.create({
     data: {
       email,
@@ -113,7 +116,9 @@ export async function registerAction(
     summary: `${user.name} created a manager account`,
     entity: "User",
     entityId: user.id,
-    metadata: parsed.data.company ? { company: parsed.data.company } : undefined,
+    metadata: parsed.data.company
+      ? { company: parsed.data.company }
+      : undefined,
   });
   redirect("/dashboard");
 }
